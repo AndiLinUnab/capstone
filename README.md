@@ -1,7 +1,7 @@
 # Capstone UNAB-Ambiental: monitoreo IoT en Bucaramanga
 
 Proyecto final de IoT + Cloud + Sistemas Distribuidos (UNAB, 2026).
-Equipo: Andi Lin, Juan Sebastian Buitrago Caballero, Miguel Angel Solano Diaz.
+Equipo: Andi Lin, Miguel Angel Solano Diaz.
 
 ## Que es
 Plataforma IoT propia en la nube con 11 dispositivos de 4 tipos, protocolo MQTT, visualizacion en Grafana,
