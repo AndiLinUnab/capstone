@@ -1,0 +1,70 @@
+services:
+  apis:
+    build: ./apis
+    image: unab-capstone-apis:1.0
+    container_name: apis
+    restart: always
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_USER: dispositivos
+      MQTT_PASS: ${MQTT_DISPOSITIVOS_PASS}
+      AZURE_MAPS_KEY: ${AZURE_MAPS_KEY}
+    depends_on:
+      - mosquitto
+
+  replay:
+    build: ./replay
+    image: unab-capstone-replay:1.0
+    container_name: replay
+    restart: always
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_USER: dispositivos
+      MQTT_PASS: ${MQTT_DISPOSITIVOS_PASS}
+      INTERVAL_SECONDS: ${INTERVAL_SECONDS:-30}
+    volumes:
+      - ./dataset/AirQualityUCI.csv:/data/AirQualityUCI.csv:ro
+    depends_on:
+      - mosquitto
+
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: https://grafana.iot-unab-capstone.duckdns.org
+      GF_SERVER_DOMAIN: grafana.iot-unab-capstone.duckdns.org
+    volumes:
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  control:
+    build: ./control
+    image: unab-capstone-control:1.0
+    container_name: control
+    restart: always
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_CONTROL_PASS: ${MQTT_CONTROL_PASS}
+      PANEL_USER: ${PANEL_USER}
+      PANEL_PASS: ${PANEL_PASS}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - mosquitto
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/site:/srv/site:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - grafana
+      - control
+
+volumes:
+  caddy_data:
+  caddy_config:

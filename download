@@ -1,0 +1,11 @@
+.env
+*.pem
+*.key
+*.bak
+*.bak2
+mosquitto/passwd
+dataset/*.csv
+dataset/*.xlsx
+dataset/*.zip
+backups/
+__pycache__/

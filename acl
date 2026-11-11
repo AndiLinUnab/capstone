@@ -1,0 +1,19 @@
+user ingesta
+topic read unab/capstone/#
+
+user dispositivos
+topic write unab/capstone/+/+/telemetria
+topic write unab/capstone/+/+/estado
+topic write unab/capstone/+/+/ack
+topic read unab/capstone/+/+/cmd
+
+user control
+topic write unab/capstone/+/+/cmd
+topic read unab/capstone/+/+/ack
+topic read unab/capstone/+/+/estado
+
+user real
+topic write unab/capstone/real/+/telemetria
+topic write unab/capstone/real/+/estado
+topic write unab/capstone/real/+/ack
+topic read unab/capstone/real/+/cmd

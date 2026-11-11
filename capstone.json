@@ -1,0 +1,748 @@
+{
+ "uid": "capstone-resumen",
+ "title": "Capstone UNAB-Ambiental",
+ "schemaVersion": 39,
+ "version": 1,
+ "timezone": "browser",
+ "refresh": "1m",
+ "time": {
+  "from": "now-24h",
+  "to": "now"
+ },
+ "templating": {
+  "list": [
+   {
+    "name": "dispositivo",
+    "label": "Dispositivo",
+    "type": "query",
+    "datasource": {
+     "type": "influxdb",
+     "uid": "PAF8312E22B627CD4"
+    },
+    "query": "import \"influxdata/influxdb/schema\"\nschema.tagValues(bucket: \"capstone\", tag: \"dispositivo\")",
+    "multi": true,
+    "includeAll": true,
+    "refresh": 2,
+    "current": {
+     "selected": true,
+     "text": [
+      "All"
+     ],
+     "value": [
+      "$__all"
+     ]
+    }
+   }
+  ]
+ },
+ "panels": [
+  {
+   "id": 1,
+   "type": "stat",
+   "title": "Dispositivos con datos (15 min)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 0,
+    "w": 6,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "thresholds": {
+      "mode": "absolute",
+      "steps": [
+       {
+        "color": "red",
+        "value": null
+       },
+       {
+        "color": "orange",
+        "value": 8
+       },
+       {
+        "color": "green",
+        "value": 10
+       }
+      ]
+     }
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: -15m) |> filter(fn: (r) => r._measurement == \"capstone\") |> group(columns: [\"dispositivo\"]) |> last() |> group() |> count()"
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "type": "table",
+   "title": "Resumen del rango: promedio, máximo y mínimo",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 6,
+    "y": 0,
+    "w": 18,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "decimals": 2
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "d = from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field != \"fila\") |> keep(columns: [\"dispositivo\", \"_field\", \"_value\"])\na = d |> mean() |> set(key: \"stat\", value: \"promedio\")\nb = d |> max() |> set(key: \"stat\", value: \"maximo\")\nc = d |> min() |> set(key: \"stat\", value: \"minimo\")\nunion(tables: [a, b, c]) |> group() |> pivot(rowKey: [\"dispositivo\", \"_field\"], columnKey: [\"stat\"], valueColumn: \"_value\") |> sort(columns: [\"dispositivo\", \"_field\"])"
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "type": "timeseries",
+   "title": "PM2.5 (µg/m³)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "conμgm3",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"pm25\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "type": "timeseries",
+   "title": "NO2 (µg/m³)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 8,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "conμgm3",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"no2\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "type": "timeseries",
+   "title": "Temperatura (°C)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "celsius",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"temperature\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "type": "timeseries",
+   "title": "Humedad relativa (%)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 16,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"humidity\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "type": "timeseries",
+   "title": "Río: nivel (m)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "lengthm",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"nivel_m\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "type": "timeseries",
+   "title": "Río: turbidez (NTU)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 24,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"turbidez_ntu\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "type": "timeseries",
+   "title": "Tráfico: incidentes en Bucaramanga",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"incidentes\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "type": "timeseries",
+   "title": "Tráfico: retraso total (s)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 32,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "s",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"retraso_total_s\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "type": "timeseries",
+   "title": "CO del dataset (mg/m³)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"co_gt\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "type": "timeseries",
+   "title": "Índice de calidad del aire AQI (API)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 12,
+    "y": 40,
+    "w": 12,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "short",
+     "displayName": "${__field.labels.dispositivo}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and contains(value: r.dispositivo, set: ${dispositivo:json}) and r._field == \"aqi\") |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false) |> yield(name: \"mean\")"
+    }
+   ]
+  },
+  {
+   "id": 101,
+   "type": "timeseries",
+   "title": "Dispositivo real (laptop): CPU y memoria (%)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 48,
+    "w": 8,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "displayName": "${__field.labels._field}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and r.tipo == \"real\" and (r._field == \"cpu_percent\" or r._field == \"mem_percent\")) |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 102,
+   "type": "timeseries",
+   "title": "Dispositivo real (laptop): batería (%)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 8,
+    "y": 48,
+    "w": 8,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "percent",
+     "displayName": "${__field.labels._field}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     },
+     "min": 0,
+     "max": 100
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and r.tipo == \"real\" and (r._field == \"battery_percent\")) |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 103,
+   "type": "timeseries",
+   "title": "Dispositivo real (laptop): red (KiB/s)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 48,
+    "w": 8,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "KBs",
+     "displayName": "${__field.labels._field}",
+     "custom": {
+      "lineWidth": 1,
+      "spanNulls": true
+     }
+    },
+    "overrides": []
+   },
+   "options": {
+    "legend": {
+     "displayMode": "table",
+     "placement": "bottom",
+     "calcs": [
+      "mean",
+      "max",
+      "min"
+     ]
+    }
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r._measurement == \"capstone\" and r.tipo == \"real\" and (r._field == \"net_sent_kbps\" or r._field == \"net_recv_kbps\")) |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)"
+    }
+   ]
+  },
+  {
+   "id": 104,
+   "type": "table",
+   "title": "Cobertura: horas con datos por dispositivo (últimos 30 días)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 0,
+    "y": 56,
+    "w": 16,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {},
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: -30d) |> filter(fn: (r) => r._measurement == \"capstone\" and r._field != \"fila\") |> group(columns: [\"dispositivo\"]) |> aggregateWindow(every: 1h, fn: count, createEmpty: false) |> count() |> group() |> rename(columns: {_value: \"horas_con_datos\"}) |> keep(columns: [\"dispositivo\", \"horas_con_datos\"]) |> sort(columns: [\"dispositivo\"])"
+    }
+   ]
+  },
+  {
+   "id": 105,
+   "type": "stat",
+   "title": "Días de toma de datos (desde el primer dato)",
+   "datasource": {
+    "type": "influxdb",
+    "uid": "PAF8312E22B627CD4"
+   },
+   "gridPos": {
+    "x": 16,
+    "y": 56,
+    "w": 8,
+    "h": 8
+   },
+   "fieldConfig": {
+    "defaults": {
+     "unit": "d",
+     "decimals": 2,
+     "displayName": "días"
+    },
+    "overrides": []
+   },
+   "targets": [
+    {
+     "refId": "A",
+     "query": "from(bucket: \"capstone\") |> range(start: -60d) |> filter(fn: (r) => r._measurement == \"capstone\" and r._field != \"fila\") |> first() |> group() |> sort(columns: [\"_time\"]) |> limit(n: 1) |> map(fn: (r) => ({_value: float(v: int(v: now()) - int(v: r._time)) / 86400000000000.0}))"
+    }
+   ]
+  }
+ ],
+ "annotations": {
+  "list": [
+   {
+    "name": "Retroceso (pruebas de comandos)",
+    "datasource": {
+     "type": "grafana",
+     "uid": "-- Grafana --"
+    },
+    "enable": true,
+    "iconColor": "orange",
+    "target": {
+     "type": "tags",
+     "tags": [
+      "retroceso"
+     ],
+     "limit": 200,
+     "matchAny": false
+    }
+   }
+  ]
+ }
+}

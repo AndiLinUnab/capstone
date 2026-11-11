@@ -1,0 +1,14 @@
+Horas en UTC (Colombia = UTC-5). Pruebas de retroceso hechas desde el panel de control el 2026-11-10:
+- 23:14:58 y 23:15:03: twin/aire-cabecera power OFF y luego ON (apagado de solo 5 s, sin hueco visible en la serie).
+- 23:15:41 a 23:15:53: twin/rio-oro calibrate nivel_m +1.5 m (varios comandos repetidos). 23:16:13 reset_calibration. El desplazamiento artificial duro unos 30 s.
+- 23:17:17: api/aire-bga set_interval rechazado por validacion (fuera de 60-3600 s).
+2026-11-10 23:49:21 UTC reinicio de Mosquitto y Caddy (se habilita WebSocket para el dispositivo real; hueco de segundos)
+2026-11-11 23:12:48 UTC --- inicio de la prueba de retroceso con duracion ---
+2026-11-11 23:12:53 UTC twin/aire-cabecera power OK (apagado por 3 min)
+2026-11-11 23:15:57 UTC twin/aire-cabecera power OK (encendido de nuevo)
+2026-11-11 23:16:01 UTC twin/rio-oro calibrate OK (offset +1.5 m por 4 min, debe disparar Rio crecido)
+2026-11-11 23:20:05 UTC twin/rio-oro reset_calibration OK (fin del offset)
+2026-11-11 23:20:09 UTC real/laptop-casa set_interval OK (dispositivo real: intervalo 10 s por 2 min)
+2026-11-11 23:22:13 UTC real/laptop-casa set_interval OK (dispositivo real: intervalo de vuelta a 30 s)
+2026-11-11 23:22:17 UTC twin/aire-centro set_interval RECHAZADO: intervalo fuera de 2-3600 s (valor invalido, debe ser rechazado)
+2026-11-11 23:22:17 UTC --- fin de la prueba ---

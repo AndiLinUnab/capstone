@@ -1,0 +1,16 @@
+iot-unab-capstone.duckdns.org {
+	root * /srv/site
+	file_server
+}
+
+grafana.iot-unab-capstone.duckdns.org {
+	reverse_proxy grafana:3000
+}
+
+panel.iot-unab-capstone.duckdns.org {
+	reverse_proxy control:8000
+}
+
+mqtt.iot-unab-capstone.duckdns.org {
+	reverse_proxy mosquitto:9001
+}
